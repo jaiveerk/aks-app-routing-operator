@@ -4,6 +4,7 @@
 package manifests
 
 import (
+	"log"
 	"path"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -53,6 +54,7 @@ func NginxIngressClass(conf *config.Config, self *appsv1.Deployment, ingressConf
 	}
 	objs := []client.Object{ing}
 
+	log.Printf("calling getOwnerRefs in NginxIngressClass, deployment object self is %s", self)
 	owners := getOwnerRefs(self)
 	for _, obj := range objs {
 		obj.SetOwnerReferences(owners)
@@ -81,6 +83,7 @@ func NginxIngressControllerResources(conf *config.Config, self *appsv1.Deploymen
 		newNginxIngressControllerHPA(conf, ingressConfig),
 	)
 
+	log.Printf("calling getOwnerRefs in NginxIngressControllerResources, deployment object self is %s", self)
 	owners := getOwnerRefs(self)
 	for _, obj := range objs {
 		obj.SetOwnerReferences(owners)

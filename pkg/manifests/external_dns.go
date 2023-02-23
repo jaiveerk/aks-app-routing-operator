@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"path"
 
 	"github.com/Azure/aks-app-routing-operator/pkg/config"
@@ -44,6 +45,7 @@ func ExternalDnsResources(conf *config.Config, self *appsv1.Deployment, external
 	objs = append(objs, dnsCm)
 	objs = append(objs, newExternalDNSDeployment(conf, dnsCmHash, externalDnsConfig))
 
+	log.Printf("calling getOwnerRefs in ExternalDnsResources, deployment object self is %s", self)
 	owners := getOwnerRefs(self)
 	for _, obj := range objs {
 		obj.SetOwnerReferences(owners)

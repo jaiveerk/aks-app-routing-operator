@@ -5,6 +5,7 @@ package controller
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/Azure/aks-app-routing-operator/pkg/controller/dns"
@@ -139,6 +140,7 @@ func checkNamespace(kcs kubernetes.Interface, conf *config.Config) error {
 func getSelfDeploy(kcs kubernetes.Interface, conf *config.Config) (*appsv1.Deployment, error) {
 	deploy, err := kcs.AppsV1().Deployments(conf.NS).Get(context.Background(), conf.OperatorDeployment, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
+		log.Printf("isNotFound error hit in namespace %s for getSelfDeploy: %s", conf.NS, err)
 		// It's okay if we don't find the deployment - just skip setting ownership references
 		err = nil
 	}

@@ -6,6 +6,7 @@ package util
 import (
 	"context"
 	"flag"
+	"log"
 	"math/rand"
 	"time"
 
@@ -23,8 +24,11 @@ func Upsert(ctx context.Context, c client.Client, res client.Object) error {
 		patchType = client.Apply
 	}
 
+	log.Printf("Calling patch on resource with name %s", res.GetName())
 	err := c.Patch(ctx, res, patchType, client.FieldOwner("aks-app-routing-operator"), client.ForceOwnership)
 	if errors.IsNotFound(err) {
+		log.Printf("Encountered notFound error while calling patch on resource with name %s: %s", res.GetName(), err)
+		log.Printf("Calling create for resource with name %s", res.GetName())
 		err = c.Create(ctx, res)
 	}
 	return err

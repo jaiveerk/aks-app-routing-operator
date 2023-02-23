@@ -1,6 +1,8 @@
 package manifests
 
 import (
+	"log"
+
 	"github.com/Azure/aks-app-routing-operator/pkg/config"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -14,6 +16,7 @@ var (
 
 func getOwnerRefs(deploy *appsv1.Deployment) []metav1.OwnerReference {
 	if deploy == nil {
+		log.Printf("deploy object fed to getOwnerRefs was nil, returning nil")
 		return nil
 	}
 	return []metav1.OwnerReference{{
