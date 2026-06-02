@@ -72,25 +72,33 @@ func (rt ResourceType) String() string {
 	}
 }
 
-func (rt ResourceType) generateResourceDeploymentArgs() []string {
+func (rt ResourceType) generateResourceDeploymentArgs(conf *config.Config) []string {
 	switch rt {
 	case ResourceTypeGateway:
-		return []string{
+		args := []string{
 			"--source=gateway-httproute",
 			"--source=gateway-grpcroute",
 		}
+		if conf != nil && conf.EnableTLSRoute {
+			args = append(args, "--source=gateway-tlsroute")
+		}
+		return args
 	default:
 		return []string{"--source=ingress"}
 	}
 }
 
-func (rt ResourceType) generateRBACRules(dnsconfig *ExternalDnsConfig) []rbacv1.PolicyRule {
+func (rt ResourceType) generateRBACRules(conf *config.Config) []rbacv1.PolicyRule {
 	switch rt {
 	case ResourceTypeGateway:
+		resources := []string{"gateways", "httproutes", "grpcroutes"}
+		if conf != nil && conf.EnableTLSRoute {
+			resources = append(resources, "tlsroutes")
+		}
 		ret := []rbacv1.PolicyRule{
 			{
 				APIGroups: []string{"gateway.networking.k8s.io"},
-				Resources: []string{"gateways", "httproutes", "grpcroutes"},
+				Resources: resources,
 				Verbs:     []string{"get", "watch", "list"},
 			},
 		}
@@ -352,9 +360,9 @@ func externalDnsResourcesFromConfig(conf *config.Config, externalDnsConfig *Exte
 	}
 
 	if externalDnsConfig.isNamespaced {
-		objs = append(objs, newExternalDnsNamespacedRBAC(externalDnsConfig)...)
+		objs = append(objs, newExternalDnsNamespacedRBAC(conf, externalDnsConfig)...)
 	} else {
-		objs = append(objs, newExternalDNSClusterRBAC(externalDnsConfig)...)
+		objs = append(objs, newExternalDNSClusterRBAC(conf, externalDnsConfig)...)
 	}
 
 	dnsCm, dnsCmHash := newExternalDNSConfigMap(conf, externalDnsConfig)
@@ -383,7 +391,7 @@ func newExternalDNSServiceAccount(externalDnsConfig *ExternalDnsConfig) *corev1.
 	}
 }
 
-func newExternalDnsNamespacedRBAC(externalDnsConfig *ExternalDnsConfig) []client.Object {
+func newExternalDnsNamespacedRBAC(conf *config.Config, externalDnsConfig *ExternalDnsConfig) []client.Object {
 	ret := []client.Object{}
 	role := &rbacv1.Role{
 		TypeMeta: metav1.TypeMeta{
@@ -419,7 +427,7 @@ func newExternalDnsNamespacedRBAC(externalDnsConfig *ExternalDnsConfig) []client
 		if resourceType == ResourceTypeGateway {
 			ret = append(ret, listNamespaceRBAC(externalDnsConfig)...)
 		}
-		role.Rules = append(role.Rules, resourceType.generateRBACRules(externalDnsConfig)...)
+		role.Rules = append(role.Rules, resourceType.generateRBACRules(conf)...)
 	}
 
 	roleBinding := &rbacv1.RoleBinding{
@@ -447,7 +455,7 @@ func newExternalDnsNamespacedRBAC(externalDnsConfig *ExternalDnsConfig) []client
 	return append([]client.Object{role, roleBinding}, ret...)
 }
 
-func newExternalDNSClusterRBAC(externalDnsConfig *ExternalDnsConfig) []client.Object {
+func newExternalDNSClusterRBAC(conf *config.Config, externalDnsConfig *ExternalDnsConfig) []client.Object {
 	ret := []client.Object{}
 	clusterRole := &rbacv1.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
@@ -479,7 +487,7 @@ func newExternalDNSClusterRBAC(externalDnsConfig *ExternalDnsConfig) []client.Ob
 	}
 	sort.Slice(sortedRts, func(i, j int) bool { return sortedRts[i] < sortedRts[j] })
 	for _, resourceType := range sortedRts {
-		clusterRole.Rules = append(clusterRole.Rules, resourceType.generateRBACRules(externalDnsConfig)...)
+		clusterRole.Rules = append(clusterRole.Rules, resourceType.generateRBACRules(conf)...)
 		if resourceType == ResourceTypeGateway {
 			ret = append(ret, listNamespaceRBAC(externalDnsConfig)...)
 		}
@@ -622,7 +630,7 @@ func newExternalDNSDeployment(conf *config.Config, externalDnsConfig *ExternalDn
 
 	resourceTypeArgs := make([]string, 0)
 	for resourceType := range externalDnsConfig.resourceTypes {
-		resourceTypeArgs = append(resourceTypeArgs, resourceType.generateResourceDeploymentArgs()...)
+		resourceTypeArgs = append(resourceTypeArgs, resourceType.generateResourceDeploymentArgs(conf)...)
 	}
 
 	sort.Slice(resourceTypeArgs, func(i, j int) bool { return resourceTypeArgs[i] < resourceTypeArgs[j] })

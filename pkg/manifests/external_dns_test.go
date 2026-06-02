@@ -272,6 +272,17 @@ var (
 			DnsConfigs: []*ExternalDnsConfig{publicGwConfigWithFilters},
 		},
 		{
+			Name: "gateway-crd-tlsroute",
+			Conf: &config.Config{ClusterUid: clusterUid, DnsSyncInterval: time.Minute * 3, EnableTLSRoute: true},
+			Deploy: &appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-dns-config-external-dns",
+					UID:  "test-operator-deploy-uid",
+				},
+			},
+			DnsConfigs: []*ExternalDnsConfig{publicGwConfig},
+		},
+		{
 			Name: "gateway-namespace-scoped-crd",
 			Conf: &config.Config{ClusterUid: clusterUid, DnsSyncInterval: time.Minute * 3},
 			Deploy: &appsv1.Deployment{

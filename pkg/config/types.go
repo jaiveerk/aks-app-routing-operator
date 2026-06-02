@@ -79,6 +79,7 @@ type Config struct {
 	DnsSyncInterval                     time.Duration
 	CrdPath                             string
 	EnableGatewayTLS                    bool
+	EnableTLSRoute                      bool
 	DisableExpensiveCache               bool
 	EnableInternalLogging               bool
 	EnabledWorkloadIdentity             bool

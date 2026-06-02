@@ -50,6 +50,7 @@ func init() {
 	flag.DurationVar(&Flags.DnsSyncInterval, "dns-sync-interval", defaultDnsSyncInterval, "interval at which to sync DNS records")
 	flag.StringVar(&Flags.CrdPath, "crd", "/crd", "location of the CRD manifests. manifests should be directly in this directory, not in a subdirectory")
 	flag.BoolVar(&Flags.EnableGatewayTLS, "enable-gateway-tls", false, "whether or not to support controllers to reconcile TLS certificates for Gateway API resources")
+	flag.BoolVar(&Flags.EnableTLSRoute, "enable-tlsroute", false, "enable Gateway API TLSRoute as a source for ExternalDNS. Requires the experimental Gateway API CRDs (tlsroutes.gateway.networking.k8s.io) to be installed on the cluster")
 	flag.BoolVar(&Flags.DisableExpensiveCache, "disable-expensive-cache", false, "disable the cache for expensive resources that aren't core to App Routing like Pods and Events")
 	flag.BoolVar(&Flags.EnableInternalLogging, "enable-internal-logging", false, "enable internal logging for internal customers, includes things like json format and additional fields in logs")
 	flag.BoolVar(&Flags.EnabledWorkloadIdentity, "enable-workload-identity", false, "enable workload identity allows users to use workload identity to authenticate to Azure resources instead of using the addon managed identity")
